@@ -22,3 +22,8 @@ fb_page_access_token = $ACCESS_TOKEN  #Access token for your FB app
 fb_page_verify_token = $VERIFY_TOKEN #Verify token for verification with facebook developer app
 football_api_key = $FOOTBALL_API_KEY #To support "show fixtures" command for bot
 ```
+
+To Run server on your local - 
+```python
+python3 bot_server.py
+```
