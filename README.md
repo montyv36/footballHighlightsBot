@@ -14,10 +14,15 @@ Just reply
 team Liverpool
 ```
 Bot will go through reddit posts of last night and most likely fetch these posts - 
+
 [Goal 1](https://www.reddit.com/r/soccer/comments/jz1vg8/liverpool_1_0_leicester_jonny_evans_og_21/)
+
 [Goal 2](https://www.reddit.com/r/soccer/comments/jz28rl/liverpool_2_0_leicester_diogo_jota_41/)
+
 [Handball shout](https://www.reddit.com/r/soccer/comments/jz2xn2/leicester_handball_shout_vs_liverpool_no_penalty/)
+
 [Firmino hits the post](https://www.reddit.com/r/soccer/comments/jz389k/roberto_firmino_hits_the_post_against_leicester/)
+
 [Goal 3](https://www.reddit.com/r/soccer/comments/jz3e8r/liverpool_3_0_leicester_roberto_firmino_86/)
 
 All of these videos will be downloaded and then merged in a single video. After that bot will upload the video in user's chat
