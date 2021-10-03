@@ -8,6 +8,7 @@ import os
 import sys
 import cv2
 from config import returnConfig
+import pathlib
 # from praw.models import InlineVideo
 
 
@@ -79,7 +80,7 @@ def valid(x):
 	return ord(x) >= 48 and ord(x) <= 57
 
 def get_video(a,s_id):
-	x = requests.get(a)
+	x = requests.get(a, verify=False)
 	v = x.text
 	regexText = ""
 	if "streamja" in a :
@@ -116,7 +117,7 @@ def get_video(a,s_id):
 
 def getRefreshedUrl(s_id):
 	pushshift_url = "https://api.pushshift.io/reddit/comment/search?subreddit=soccer&link_id="+s_id+"&author=streamablemirrors"
-	x = requests.get(pushshift_url).json()
+	x = requests.get(pushshift_url, verify=False).json()
 	for z in x["data"]:
 		if "streamable.com" in z["body"]:
 			start = z["body"].find("streamable.com")
@@ -138,7 +139,7 @@ def getRefreshedUrl(s_id):
 
 
 def getMergedVideo(videoUrls , team):
-	fileLoc = "/home/montyv36/"
+	fileLoc = str(pathlib.Path().resolve())+"/video_locations/"
 	opener = urllib.request.URLopener()
 	opener.addheader('User-Agent', 'whatever')
 	start = 1
@@ -147,6 +148,7 @@ def getMergedVideo(videoUrls , team):
 	for v in videoUrls :
 		# print(v)
 		location = fileLoc + str(start) + ".mp4"
+		print(v+" :::" +location)
 
 		opener.retrieve(v , location )
 		videoFs = cv2.VideoCapture(location)
@@ -165,20 +167,20 @@ def getMergedVideo(videoUrls , team):
 		location = fileLoc + str(newStart) + ".mp4"
 		print("Merging Url - " + location)
 		secondVideo = location
-		command = "ffmpeg -y -loglevel warning -i "+ startVideo +" -i "file_location+str(newStart)+".mp4 -filter_complex \" [0:v] scale=w=min(iw*"+str(width)+"/ih\\,"+str(height)+"):h=min("+str(width)+"\\,ih*"+str(height)+"/iw), pad=w="+str(height)+":h="+str(width)+":x=("+str(height)+"-iw)/2:y=("+str(width)+"-ih)/2  [video0]; [1:v] scale=w=min(iw*"+str(width)+"/ih\\,"+str(height)+"):h=min("+str(width)+"\\,ih*"+str(height)+"/iw), pad=w="+str(height)+":h="+str(width)+":x=("+str(height)+"-iw)/2:y=("+str(width)+"-ih)/2  [video1];[0:a] anull [audio0];[1:a] anull [audio1];[video0][audio0][video1][audio1] concat=n=2:v=1:a=1 [v][a]\" -map \"[v]\" -map \"[a]\" -c:a aac -c:v h264 -crf 18 -preset veryfast -vsync 2 -f mp4 "+file_location+"mergedVideo.mp4"
+		command = "ffmpeg -y -loglevel warning -i "+ startVideo +" -i "+fileLoc+str(newStart)+".mp4 -filter_complex \" [0:v] scale=w=min(iw*"+str(width)+"/ih\\,"+str(height)+"):h=min("+str(width)+"\\,ih*"+str(height)+"/iw), pad=w="+str(height)+":h="+str(width)+":x=("+str(height)+"-iw)/2:y=("+str(width)+"-ih)/2  [video0]; [1:v] scale=w=min(iw*"+str(width)+"/ih\\,"+str(height)+"):h=min("+str(width)+"\\,ih*"+str(height)+"/iw), pad=w="+str(height)+":h="+str(width)+":x=("+str(height)+"-iw)/2:y=("+str(width)+"-ih)/2  [video1];[0:a] anull [audio0];[1:a] anull [audio1];[video0][audio0][video1][audio1] concat=n=2:v=1:a=1 [v][a]\" -map \"[v]\" -map \"[a]\" -c:a aac -c:v h264 -crf 18 -preset veryfast -vsync 2 -f mp4 "+fileLoc+"mergedVideo.mp4"
 		os.system(command)
-		os.remove(file_location+"/1.mp4")
-		os.rename(file_location+"/mergedVideo.mp4",file_location+"/1.mp4")
+		os.remove((fileLoc+"1.mp4"))
+		os.rename((fileLoc+"/mergedVideo.mp4"),(fileLoc+"/1.mp4"))
 		newStart = newStart + 1
-	os.rename(file_location+"/1.mp4",file_location+"/mergedVideo.mp4")
-	teamFileName = file_location+"/"+team+".mp4"
-	command = "ffmpeg -i "+file_location+"/mergedVideo.mp4 -c:v libx264 -crf 24 -b:v 1M -c:a aac "+teamFileName
+	os.rename((fileLoc+"/1.mp4"),(fileLoc+"/mergedVideo.mp4"))
+	teamFileName = fileLoc+team+".mp4"
+	command = "ffmpeg -i "+fileLoc+"/mergedVideo.mp4 -c:v libx264 -crf 24 -b:v 1M -c:a aac "+teamFileName
 	os.system(command)
-	os.remove(file_location+"/mergedVideo.mp4")
+	os.remove((fileLoc+"/mergedVideo.mp4"))
 	x = 2
-	while x< start:
-		if os.path.isfile(file_location+"/"+str(x)+".mp4"):
-			os.remove(file_location+str(x)+".mp4")
+	while x < start:
+		if os.path.isfile(fileLoc+"/"+str(x)+".mp4"):
+			os.remove(fileLoc+str(x)+".mp4")
 		x = x+1
 
 teams = []
@@ -187,11 +189,14 @@ teams.append(sys.argv[1])
 submission_id = sys.argv[2]
 print("Team - "+sys.argv[1]+" , Sub_id - "+submission_id)
 
+videoLocation = (str(pathlib.Path().resolve())+"/video_locations/")
+if not os.path.exists(videoLocation):
+	os.makedirs(videoLocation)
 cache = []
 for t in teams:
 	print(t)
-	pushshift_url = "https://api.pushshift.io/reddit/submission/search?q="+t+"&limit=100&sort_type=created_utc&sort=desc&subreddit=soccer&after=6d"
-	x = requests.get(pushshift_url).json()
+	pushshift_url = "https://api.pushshift.io/reddit/submission/search?q="+t+"&limit=100&sort_type=created_utc&sort=desc&subreddit=soccer&after=2d"
+	x = requests.get(pushshift_url, verify=False).json()
 	lists = []
 	print(len(x["data"]))
 	high_dict[t] = HighLights(lists)
@@ -206,7 +211,7 @@ for t in teams:
 
 text_body = ""
 for key , value in high_dict.items() :
-	if len(value.list_of_urls) > 0 and not os.path.isfile(file_location+key+".mp4"):
+	if len(value.list_of_urls) > 0 and not os.path.isfile(videoLocation+key+".mp4"):
 		text_body = text_body + "**Team Name - "+ key + "** \n\n"
 		# print(key)
 		videoUrls = []

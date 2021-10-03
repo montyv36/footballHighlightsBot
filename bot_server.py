@@ -5,6 +5,7 @@ from flask import Flask, request
 from pymessenger.bot import Bot
 import threading
 import os
+from config import returnConfig
 
 app = Flask(__name__)
 apiConfig = returnConfig()
@@ -42,7 +43,7 @@ def receive_message():
           messaging = event['messaging']
           for message in messaging:
                 #Facebook Messenger ID for user so we know where to send response back to
-                recipient_id = message['sender']['id']
+                recipient_id = message['message']['sender']['id']
                 print(recipient_id)
                 if message.get('message') and  message['message'].get('text'):
                     response_sent_text = str(message['message'].get('text'))
@@ -71,7 +72,7 @@ def verify_fb_token(token_sent):
     return 'Invalid verification token'
 
 def send_message(recipient_id, response):
-    bot.send_text_message(recipient_id, response)
+    # bot.send_text_message(recipient_id, response)
     return "success"
 
 if __name__ == "__main__":

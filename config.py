@@ -3,5 +3,5 @@ import configparser
 
 def returnConfig():
 	config = configparser.ConfigParser()
-	config.read("config.ini")
+	config.read("conf.ini")
 	return config
